@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PocketTrack – Student Expense & Budget Manager{% endblock %}</title>
+    <!-- PocketTrack Main Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="sidebar-header">
+                <div class="logo-badge">₹</div>
+                <div class="logo-text">
+                    <h2>PocketTrack</h2>
+                    <span>Student Budget</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-label">Navigation</div>
+                <a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('expense.list_expenses') }}" class="nav-link {% if request.endpoint == 'expense.list_expenses' %}active{% endif %}">
+                    <span class="nav-icon">📑</span>
+                    <span>Expense History</span>
+                </a>
+                <a href="{{ url_for('expense.add_expense') }}" class="nav-link {% if request.endpoint == 'expense.add_expense' %}active{% endif %}">
+                    <span class="nav-icon">➕</span>
+                    <span>Add Expense</span>
+                </a>
+
+                <div class="nav-label" style="margin-top: 14px;">Quick Actions</div>
+                <a href="javascript:void(0);" class="nav-link" data-open-modal="budgetModal">
+                    <span class="nav-icon">🎯</span>
+                    <span>Set Monthly Budget</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-widget">
+                    <div class="user-avatar">
+                        {{ current_user.name[0]|upper if current_user and current_user.name else 'S' }}
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">{{ current_user.name if current_user else 'Student' }}</div>
+                        <div class="user-role">@{{ current_user.username if current_user else 'user' }}</div>
+                    </div>
+                    <a href="{{ url_for('auth.logout') }}" class="logout-link" title="Logout">
+                        🚪
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main App Area -->
+        <div class="app-main">
+            <!-- Topbar Header -->
+            <header class="app-topbar">
+                <div class="topbar-left">
+                    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Sidebar">
+                        ☰
+                    </button>
+                    <div class="topbar-title">
+                        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="btn btn-outline btn-sm" data-open-modal="budgetModal">
+                        🎯 Set Budget
+                    </button>
+                    <a href="{{ url_for('expense.add_expense') }}" class="btn btn-primary btn-sm">
+                        ➕ Add Expense
+                    </a>
+                </div>
+            </header>
+
+            <!-- Container Body -->
+            <main class="page-container">
+                <!-- Flash Notification Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    <div class="alert-content">
+                                        <span class="alert-icon">
+                                            {% if category == 'success' %}✅
+                                            {% elif category == 'danger' %}⚠️
+                                            {% elif category == 'warning' %}🔔
+                                            {% else %}ℹ️{% endif %}
+                                        </span>
+                                        <span>{{ message }}</span>
+                                    </div>
+                                    <button class="alert-close" aria-label="Close Alert">&times;</button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Child Template Content -->
+                {% block content %}{% endblock %}
+            </main>
+
+            <!-- Academic Footer -->
+            <footer class="app-footer">
+                PocketTrack &copy; BCA Academic Project &bull; Built with Python Flask, SQLite & Jinja2
+            </footer>
+        </div>
+    </div>
+
+    <!-- Set / Update Monthly Budget Modal -->
+    <div class="modal-backdrop" id="budgetModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">🎯 Set Monthly Budget</h3>
+                <button class="modal-close" data-close-modal="budgetModal">&times;</button>
+            </div>
+            <form action="{{ url_for('dashboard.set_budget') }}" method="POST">
+                <div class="modal-body">
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                        Set your target spending limit for this month. PocketTrack will calculate your remaining balance and warn you when you approach or exceed it.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label" for="budget_amount">Monthly Budget Amount (₹) <span class="required">*</span></label>
+                        <input type="number" step="0.01" min="0" name="amount" id="budget_amount" class="form-control" placeholder="e.g. 5000" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-close-modal="budgetModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

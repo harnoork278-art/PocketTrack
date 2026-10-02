@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register – PocketTrack Student Budget Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <div class="logo-badge">₹</div>
+                    <h1>PocketTrack</h1>
+                </div>
+                <p>Create your student expense tracking account</p>
+            </div>
+
+            <!-- Flash Notifications -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <div class="alert-content">
+                                    <span class="alert-icon">
+                                        {% if category == 'success' %}✅
+                                        {% elif category == 'danger' %}⚠️
+                                        {% elif category == 'warning' %}🔔
+                                        {% else %}ℹ️{% endif %}
+                                    </span>
+                                    <span>{{ message }}</span>
+                                </div>
+                                <button class="alert-close" aria-label="Close Alert">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('auth.register') }}" method="POST" autocomplete="on">
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name <span class="required">*</span></label>
+                    <input type="text" name="name" id="name" class="form-control" placeholder="e.g. Rahul Sharma" value="{{ form_data.name if form_data else '' }}" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="username">Username <span class="required">*</span></label>
+                    <input type="text" name="username" id="username" class="form-control" placeholder="e.g. rahul24" value="{{ form_data.username if form_data else '' }}" required pattern="^[a-zA-Z0-9_]{3,30}$" title="3-30 alphanumeric characters or underscores">
+                    <small class="form-text">3-30 letters, numbers, or underscores</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Student Email <span class="required">*</span></label>
+                    <input type="email" name="email" id="email" class="form-control" placeholder="e.g. rahul@college.edu" value="{{ form_data.email if form_data else '' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password <span class="required">*</span></label>
+                        <input type="password" name="password" id="password" class="form-control" placeholder="Min. 6 chars" minlength="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="confirm_password">Confirm Password <span class="required">*</span></label>
+                        <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="Repeat password" minlength="6" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="padding: 12px; margin-top: 8px;">
+                    📝 Register Account
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                Already registered? <a href="{{ url_for('auth.login') }}">Login here</a>
+            </div>
+
+            <div class="auth-demo-badge">
+                🔒 Passwords securely hashed with Werkzeug &bull; Stored in SQLite
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

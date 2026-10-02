@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Add Expense – PocketTrack{% endblock %}
+{% block page_title %}Add New Expense{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>➕</span> Log Daily Expenditure
+            </div>
+            <a href="{{ url_for('expense.list_expenses') }}" class="btn btn-outline btn-sm">
+                &larr; Back to History
+            </a>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('expense.add_expense') }}" method="POST" autocomplete="off">
+                <!-- Expense Name -->
+                <div class="form-group">
+                    <label class="form-label" for="expense_name">Expense Name / Title <span class="required">*</span></label>
+                    <input type="text" name="expense_name" id="expense_name" class="form-control" placeholder="e.g. Canteen Lunch, Semester Textbook, Bus Pass" value="{{ form_data.expense_name if form_data and form_data.expense_name else '' }}" required autofocus>
+                    <small class="form-text">Brief description of what you paid for</small>
+                </div>
+
+                <!-- Amount and Category -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="amount">Amount (₹) <span class="required">*</span></label>
+                        <input type="number" step="0.01" min="0.01" name="amount" id="amount" class="form-control" placeholder="e.g. 150.00" value="{{ form_data.amount if form_data and form_data.amount else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="category">Category <span class="required">*</span></label>
+                        <select name="category" id="category" class="form-control" required>
+                            <option value="" disabled {% if not form_data or not form_data.category %}selected{% endif %}>Select category</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat }}" {% if form_data and form_data.category == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Date and Payment Method -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="expense_date">Date of Expense <span class="required">*</span></label>
+                        <input type="date" name="expense_date" id="expense_date" class="form-control" value="{{ form_data.expense_date if form_data and form_data.expense_date else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="payment_method">Payment Method <span class="required">*</span></label>
+                        <select name="payment_method" id="payment_method" class="form-control" required>
+                            {% for method in payment_methods %}
+                                <option value="{{ method }}" {% if form_data and form_data.payment_method == method %}selected{% elif not form_data and method == 'UPI' %}selected{% endif %}>{{ method }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Note (Optional) -->
+                <div class="form-group">
+                    <label class="form-label" for="note">Additional Notes (Optional)</label>
+                    <textarea name="note" id="note" class="form-control" rows="3" placeholder="e.g. Split with classmate Rohan, paid via Google Pay">{{ form_data.note if form_data and form_data.note else '' }}</textarea>
+                </div>
+
+                <!-- Submit and Cancel Buttons -->
+                <div style="display: flex; gap: 12px; margin-top: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 2; padding: 12px;">
+                        💾 Save Expense Record
+                    </button>
+                    <a href="{{ url_for('expense.list_expenses') }}" class="btn btn-secondary" style="flex: 1; padding: 12px;">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

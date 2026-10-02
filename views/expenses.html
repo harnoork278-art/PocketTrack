@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Expense History – PocketTrack{% endblock %}
+{% block page_title %}Expense History & Records{% endblock %}
+
+{% block content %}
+<!-- Filter & Search Controls Bar -->
+<div class="filter-card">
+    <form action="{{ url_for('expense.list_expenses') }}" method="GET" class="filter-form">
+        <!-- Search Keyword -->
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="search">🔍 Search Expenses</label>
+            <input type="text" name="search" id="search" class="form-control" placeholder="Search by name, note..." value="{{ search_query }}">
+        </div>
+
+        <!-- Category Filter -->
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="category">📂 Category</label>
+            <select name="category" id="category" class="form-control">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Start Date -->
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="start_date">📅 From Date</label>
+            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date_str }}">
+        </div>
+
+        <!-- End Date -->
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="end_date">📅 To Date</label>
+            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date_str }}">
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" class="btn btn-primary">
+                Filter
+            </button>
+            {% if search_query or selected_category or start_date_str or end_date_str %}
+                <a href="{{ url_for('expense.list_expenses') }}" class="btn btn-outline" title="Reset Filters">
+                    Reset
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Expense List Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <span>📑</span>
+            <span>Recorded Expenses ({{ expense_count }})</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <!-- Real-time instant search -->
+            <input type="text" id="clientQuickSearch" class="form-control" style="width: 180px; padding: 6px 10px; font-size: 0.85rem;" placeholder="Instant quick search...">
+            <div style="font-size: 0.95rem; font-weight: 700; color: var(--primary);">
+                Total: {{ total_amount|currency }}
+            </div>
+            <a href="{{ url_for('expense.add_expense') }}" class="btn btn-primary btn-sm">
+                ➕ Add Expense
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body" style="padding: 0;">
+        {% if expenses %}
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Expense Name</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Payment Method</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody">
+                        {% for expense in expenses %}
+                            <tr>
+                                <td>
+                                    <strong>{{ expense.expense_name }}</strong>
+                                    {% if expense.note %}
+                                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                                            {{ expense.note }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge-category cat-{{ expense.category }}">
+                                        {{ expense.category }}
+                                    </span>
+                                </td>
+                                <td class="amount-col">
+                                    {{ expense.amount|currency }}
+                                </td>
+                                <td>
+                                    {{ expense.expense_date.strftime('%d %b %Y') }}
+                                </td>
+                                <td>
+                                    <span class="badge-payment">
+                                        {{ expense.payment_method }}
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <div class="action-buttons" style="justify-content: flex-end;">
+                                        <!-- Edit Action -->
+                                        <a href="{{ url_for('expense.edit_expense', expense_id=expense.id) }}" class="btn btn-outline btn-sm" title="Edit Expense">
+                                            ✏️ Edit
+                                        </a>
+
+                                        <!-- Delete Action with Confirmation -->
+                                        <form action="{{ url_for('expense.delete_expense', expense_id=expense.id) }}" method="POST" class="delete-expense-form" style="display: inline;">
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Delete Expense">
+                                                🗑️ Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <h3>No Expenses Found</h3>
+                <p>
+                    {% if search_query or selected_category or start_date_str or end_date_str %}
+                        No expense records match your current filters. Try resetting the filters.
+                    {% else %}
+                        You haven't logged any expenses yet. Start tracking your daily college expenses!
+                    {% endif %}
+                </p>
+                {% if search_query or selected_category or start_date_str or end_date_str %}
+                    <a href="{{ url_for('expense.list_expenses') }}" class="btn btn-outline btn-sm">Reset All Filters</a>
+                {% else %}
+                    <a href="{{ url_for('expense.add_expense') }}" class="btn btn-primary btn-sm">➕ Add Your First Expense</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

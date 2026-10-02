@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Expense – PocketTrack{% endblock %}
+{% block page_title %}Edit Expense Record{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>✏️</span> Edit Expense #{{ expense.id }}
+            </div>
+            <a href="{{ url_for('expense.list_expenses') }}" class="btn btn-outline btn-sm">
+                &larr; Back to History
+            </a>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('expense.edit_expense', expense_id=expense.id) }}" method="POST" autocomplete="off">
+                <!-- Expense Name -->
+                <div class="form-group">
+                    <label class="form-label" for="expense_name">Expense Name / Title <span class="required">*</span></label>
+                    <input type="text" name="expense_name" id="expense_name" class="form-control" value="{{ expense.expense_name }}" required autofocus>
+                    <small class="form-text">Update the description of this expense</small>
+                </div>
+
+                <!-- Amount and Category -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="amount">Amount (₹) <span class="required">*</span></label>
+                        <input type="number" step="0.01" min="0.01" name="amount" id="amount" class="form-control" value="{{ expense.amount }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="category">Category <span class="required">*</span></label>
+                        <select name="category" id="category" class="form-control" required>
+                            {% for cat in categories %}
+                                <option value="{{ cat }}" {% if expense.category == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Date and Payment Method -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="expense_date">Date of Expense <span class="required">*</span></label>
+                        <input type="date" name="expense_date" id="expense_date" class="form-control" value="{{ expense.expense_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="payment_method">Payment Method <span class="required">*</span></label>
+                        <select name="payment_method" id="payment_method" class="form-control" required>
+                            {% for method in payment_methods %}
+                                <option value="{{ method }}" {% if expense.payment_method == method %}selected{% endif %}>{{ method }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Note -->
+                <div class="form-group">
+                    <label class="form-label" for="note">Additional Notes (Optional)</label>
+                    <textarea name="note" id="note" class="form-control" rows="3">{{ expense.note if expense.note else '' }}</textarea>
+                </div>
+
+                <!-- Submit and Cancel Buttons -->
+                <div style="display: flex; gap: 12px; margin-top: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 2; padding: 12px;">
+                        💾 Update Expense
+                    </button>
+                    <a href="{{ url_for('expense.list_expenses') }}" class="btn btn-secondary" style="flex: 1; padding: 12px;">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

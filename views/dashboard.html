@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard – PocketTrack{% endblock %}
+{% block page_title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<!-- Welcome Header Banner -->
+<div style="margin-bottom: 24px;">
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main);">
+        Hello, {{ user.name }} 👋
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+        Here is your monthly financial overview for <strong>{{ month_name }}</strong>.
+    </p>
+</div>
+
+<!-- Dynamic Budget Status Banner with Warning / Exceeded states -->
+<div class="budget-alert-banner state-{{ budget_status }}">
+    <div class="budget-banner-left">
+        <div class="budget-banner-icon">
+            {% if budget_status == 'exceeded' %}🚨
+            {% elif budget_status == 'warning' %}⚠️
+            {% elif budget_status == 'normal' %}🛡️
+            {% else %}🎯{% endif %}
+        </div>
+        <div class="budget-banner-text">
+            <h4>
+                {% if budget_status == 'exceeded' %}Budget Overspent!
+                {% elif budget_status == 'warning' %}Budget Warning!
+                {% elif budget_status == 'normal' %}Budget On Track
+                {% else %}Set Your Budget{% endif %}
+            </h4>
+            <p>{{ budget_message }}</p>
+            {% if monthly_budget > 0 %}
+                <div class="budget-progress-container" style="max-width: 480px;">
+                    <div class="budget-progress-bar progress-{{ budget_status }}" style="width: {{ [budget_percentage, 100]|min }}%;"></div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div>
+        <button class="btn btn-sm {% if budget_status == 'exceeded' %}btn-danger{% elif budget_status == 'warning' %}btn-primary{% else %}btn-outline{% endif %}" data-open-modal="budgetModal">
+            ✏️ Update Budget
+        </button>
+    </div>
+</div>
+
+<!-- 5 Top Metric Cards -->
+<div class="metrics-grid">
+    <!-- Monthly Budget -->
+    <div class="metric-card">
+        <div class="metric-icon-box icon-budget">🎯</div>
+        <div class="metric-info">
+            <div class="metric-label">Monthly Budget</div>
+            <div class="metric-value">{{ monthly_budget|currency }}</div>
+            <div class="metric-sub">{{ month_name }}</div>
+        </div>
+    </div>
+
+    <!-- Total Spent -->
+    <div class="metric-card">
+        <div class="metric-icon-box icon-spent">💸</div>
+        <div class="metric-info">
+            <div class="metric-label">Total Spent</div>
+            <div class="metric-value">{{ total_spent|currency }}</div>
+            <div class="metric-sub">{{ budget_percentage }}% of budget</div>
+        </div>
+    </div>
+
+    <!-- Remaining Budget -->
+    <div class="metric-card">
+        <div class="metric-icon-box {% if budget_status == 'exceeded' %}icon-remaining-danger{% elif budget_status == 'warning' %}icon-remaining-warning{% else %}icon-remaining-normal{% endif %}">
+            {% if budget_status == 'exceeded' %}🔻{% else %}💰{% endif %}
+        </div>
+        <div class="metric-info">
+            <div class="metric-label">Remaining</div>
+            <div class="metric-value" style="{% if budget_status == 'exceeded' %}color: var(--danger);{% elif budget_status == 'warning' %}color: var(--warning);{% else %}color: var(--success);{% endif %}">
+                {{ remaining_budget|currency }}
+            </div>
+            <div class="metric-sub">
+                {% if remaining_budget < 0 %}Deficit{% else %}Available balance{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Number of Expenses -->
+    <div class="metric-card">
+        <div class="metric-icon-box icon-count">🔢</div>
+        <div class="metric-info">
+            <div class="metric-label">Expenses</div>
+            <div class="metric-value">{{ expense_count }}</div>
+            <div class="metric-sub">Transactions logged</div>
+        </div>
+    </div>
+
+    <!-- Highest Spending Category -->
+    <div class="metric-card">
+        <div class="metric-icon-box icon-category">🏆</div>
+        <div class="metric-info">
+            <div class="metric-label">Highest Category</div>
+            <div class="metric-value" style="font-size: 1.15rem; font-weight: 700;">{{ highest_category }}</div>
+            <div class="metric-sub">
+                {% if highest_category_amount > 0 %}{{ highest_category_amount|currency }}{% else %}No spends yet{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Two-Column Analytics: Category Breakdown + Smart Insights -->
+<div class="analytics-grid">
+    <!-- Category Breakdown with Dynamic Chart.js -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>📊</span> Category Analysis
+            </div>
+            <span class="badge-payment">{{ month_name }}</span>
+        </div>
+        <div class="card-body">
+            {% if category_labels %}
+                <div class="chart-wrapper">
+                    <canvas id="categoryChart" 
+                            data-labels='{{ category_labels|tojson }}' 
+                            data-values='{{ category_values|tojson }}'
+                            height="240"></canvas>
+                </div>
+                <!-- Category Breakdown Table -->
+                <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+                        {% for i in range(category_labels|length) %}
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: var(--bg-main); border-radius: var(--border-radius-sm);">
+                                <span class="badge-category cat-{{ category_labels[i] }}">{{ category_labels[i] }}</span>
+                                <strong style="font-size: 0.88rem;">₹{{ "{:,.2f}".format(category_values[i]) }}</strong>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📈</div>
+                    <h3>No Spending Recorded Yet</h3>
+                    <p>Add your daily expenses to see category-wise charts and visualizations.</p>
+                    <a href="{{ url_for('expense.add_expense') }}" class="btn btn-primary btn-sm">➕ Add Your First Expense</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Smart Spending Insights (Database Derived) -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>💡</span> Smart Insights
+            </div>
+            <span class="badge-payment">Real-Time</span>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+                Automated spending insights calculated from your actual transactions:
+            </p>
+            <ul class="insights-list">
+                {% for insight in insights %}
+                    <li class="insight-item">
+                        <span class="insight-icon">✨</span>
+                        <span>{{ insight }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Expenses Table -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <span>🕒</span> Recent Expenses
+        </div>
+        <div>
+            <a href="{{ url_for('expense.list_expenses') }}" class="btn btn-outline btn-sm">
+                View All History &rarr;
+            </a>
+        </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if recent_expenses %}
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Expense Name</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Payment Method</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in recent_expenses %}
+                            <tr>
+                                <td>
+                                    <strong>{{ expense.expense_name }}</strong>
+                                    {% if expense.note %}
+                                        <div style="font-size: 0.78rem; color: var(--text-muted);">{{ expense.note }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge-category cat-{{ expense.category }}">{{ expense.category }}</span>
+                                </td>
+                                <td class="amount-col">{{ expense.amount|currency }}</td>
+                                <td>{{ expense.expense_date.strftime('%d %b %Y') }}</td>
+                                <td><span class="badge-payment">{{ expense.payment_method }}</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{{ url_for('expense.edit_expense', expense_id=expense.id) }}" class="btn btn-outline btn-sm" title="Edit">
+                                            ✏️ Edit
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🧾</div>
+                <h3>No Expenses Recorded</h3>
+                <p>Start recording your daily food, travel, books, and college bills.</p>
+                <a href="{{ url_for('expense.add_expense') }}" class="btn btn-primary btn-sm">➕ Add New Expense</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
